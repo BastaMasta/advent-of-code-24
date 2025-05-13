@@ -1,27 +1,46 @@
 use std::fs::read_to_string;
-use std::collections::HashMap;
+use std::{collections::HashSet, cmp::Ordering};
 
 fn main() {
+    let input = read_to_string("input.txt").unwrap();
+    let (orderings, updates ) = input.split_once("\r\n\r\n").unwrap();
 
-    let mut page_hash : HashMap<u32, Vec<u32>> = HashMap::new();
-    let mut update : Vec<u32> = Vec::new();
+    let orderings : HashSet<(usize, usize)> = orderings.lines()
+        .map(|line| (line[0..2].parse().unwrap(), line[3..].parse().unwrap()))
+        .collect();
 
-    let mut data_flipflop = false;
+    let compare = |x: &usize, y: &usize| !orderings.contains(&(*y, *x));
 
-    for line in read_to_string("input.txt").unwrap().lines() {
-        if !data_flipflop {
-            if line.is_empty() {
-                data_flipflop = true;
-                continue;
-            }
-            conditions.push(line.split('|').map(|x| x.parse::<u32>().unwrap()).collect::<Vec<u32>>());
-            let cond = line.split('|').map(|x| x.parse::<u32>().unwrap()).collect::<Vec<u32>>();
-            let curr = page_hash.entry(cond[0]).or_insert(vec![cond[1]]);
-            if !curr.contains(&cond[1]) {
-                curr.push(cond[1]);
-            }
-        
-        }        
+    let mut count = 0;
+    for update in updates.lines() {
+        let update : Vec<usize> = update.split(',').map(|x| x.parse().unwrap()).collect();
+
+        if update.is_sorted_by(compare) {
+            count += update[update.len()/2];
+        }
     }
-    println!("Conditions: {:?}", page_hash);
+    println!("{}", count);
+
+    let compare2 = |x: &usize, y : &usize| {
+        if orderings.contains(&(*x, *y)) {
+            return Ordering::Less;
+        }
+        if orderings.contains(&(*y, *x)) {
+            return Ordering::Greater;
+        }
+        return Ordering::Equal;
+    };
+
+    let res : usize = updates.lines().map(|update| {
+        let mut update: Vec<usize> = update.split(',').map(|x| x.parse().unwrap()).collect();
+        if update.is_sorted_by(|a,b| compare2(a,b) != Ordering::Greater) {
+            0
+        } else {
+            update.sort_by(compare2);
+            update[update.len()/2]
+        }
+    }).sum();
+    
+    
+    println!("{}", res);
 }
