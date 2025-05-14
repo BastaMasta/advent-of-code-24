@@ -29,14 +29,11 @@ fn mover(grid: &mut Vec<Vec<char>>, curx: usize, cury: usize, direction: char){
             'R' => (x, y + 1),
             _ => (x, y),
         };
-        if nextx >= grid.len() || nexty >= grid[0].len() || grid[nextx][nexty] == '#'  {
+        if nextx >= grid.len() || nexty >= grid[0].len() || grid[nextx][nexty] == '#' || nextx < 0 || nexty < 0 {
             if match_turn(direction, &x, &y, &grid) == '#' || oor(direction, &x, &y, &grid.len(), &grid[0].len()) {
                 motion_flag = false
             }
-            x = nextx;
-            y = nexty;
             grid[x][y] = 'X';
-            grid[nextx][nexty] = '^';
             dir = turn(dir);
             
             
@@ -59,6 +56,9 @@ fn turn(direction: char) -> char {
 }
 
 fn match_turn(direction: char, x: &usize, y: &usize, grid : &Vec<Vec<char>>) -> char {
+    if oor(direction, x, y, &grid.len(), &grid[0].len()) {
+        return '#';
+    }
     let next = match direction {
         'U' => 'R',
         'D' => 'L',
